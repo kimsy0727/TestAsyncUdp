@@ -28,8 +28,7 @@ namespace TestAsyncUdp
         {
             UdpState state = mNetModule.Connect("127.0.0.1");
             mHost = state;
-            AsyncCallback callback = new AsyncCallback(mNetModule.ReceiveCallbackForClient);
-            Thread recv_thread = new Thread(() => mNetModule.ReceiveMessages(state, callback));
+            Thread recv_thread = new Thread(() => mNetModule.ReceiveCallbackForClient(state));
             recv_thread.Start();
             Thread send_thread = new Thread(() => mNetModule.SendMessages());
             send_thread.Start();
@@ -40,12 +39,11 @@ namespace TestAsyncUdp
         public bool StartHost()
         {
             UdpState state = mNetModule.Listen();
-            AsyncCallback callback = new AsyncCallback(mNetModule.ReceiveCallback);
-            Thread recv_thread = new Thread(() => mNetModule.ReceiveMessages(state, callback));
+            Thread recv_thread = new Thread(() => mNetModule.ReceiveCallback(state));
             recv_thread.Start();
             Thread send_thread = new Thread(() => mNetModule.SendMessages());
             send_thread.Start();
-            Thread broadcast_thread = new Thread(() => mNetModule.BroadCastMessages(state.u));
+            Thread broadcast_thread = new Thread(() => mNetModule.BroadCastMessages(state.s));
             broadcast_thread.Start();
 
             return true;

@@ -9,11 +9,11 @@ namespace TestAsyncUdp
     public class UdpState
     {
         public IPEndPoint e;
-        public UdpClient u;
+        public Socket s;
 
-        public UdpState(UdpClient _u, IPEndPoint _e)
+        public UdpState(Socket _s, IPEndPoint _e)
         {
-            u = _u;
+            s = _s;
             e = _e;
         }
     }
