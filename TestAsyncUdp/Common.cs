@@ -44,12 +44,16 @@ namespace TestAsyncUdp
         }
         public override bool CheckAvailabilityToSerialize(string _name, object _now, object _before)
         {
-            if (_name.Equals("mPosX") || _name.Equals("mPosY") || _name.Equals("mID"))
+            if (_name.Equals("mPosX") || _name.Equals("mPosY"))
             {
                 if (!_now.Equals(_before))
                     return true;
                 else
                     return false;
+            }
+            else if(_name.Equals("mID"))
+            {
+                return true;
             }
             else
             {

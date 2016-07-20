@@ -81,8 +81,8 @@ namespace TestAsyncUdp
                 /*
                  * TODO: host 에서 갱신된 actor 정보까지 포함된 object 를 패킷으로 날려주자 
                  */
-                List<Actor> list = Replicator.Instance.ProcessObject(packet.user_id, packet.objects);
-                string sendString = ProtocolHandler.EncryptPacket(packet.packet, packet.user_id, list);
+                List<Actor> list = Replicator.Instance.ProcessFunc(packet.user_id, packet.func);
+                string sendString = ProtocolHandler.EncryptPacket(packet.packet, packet.user_id, list, packet.func);
                 byte[] sendBytes = Encoding.ASCII.GetBytes(sendString);
 
                 foreach (KeyValuePair<string, Peer> peer in mClientList)

@@ -15,7 +15,6 @@ namespace TestAsyncUdp
         public Peer mClient;
         UdpState mHost;
         UdpNetModule mNetModule;
-        UInt64 mActorIdentity;
         // Actor List 
         Dictionary<Type, Dictionary<UInt64, Actor>> mActorList;
 
@@ -23,7 +22,6 @@ namespace TestAsyncUdp
         {
             mNetModule = new UdpNetModule();
             mActorList = new Dictionary<Type, Dictionary<ulong, Actor>>();
-            mActorIdentity = 0;
         }
 
         public bool StartClient()
@@ -74,17 +72,20 @@ namespace TestAsyncUdp
             {
                 mActorList[type].Add(actor.ID, actor);
             }
-            // actor 를 갱신하자.
-            mActorList[type][actor.ID] = actor;
 
             return actor;
         }
         public Actor GetObject(Type type, UInt64 id)
         {
+            if (!mActorList.ContainsKey(type))
+                return null;
+            else if (!mActorList[type].ContainsKey(id))
+                return null;
+
             return mActorList[type][id];
         }
 
-        public void AddObject(List<Actor> actor_list)
+        public void SendPacket(List<Actor> actor_list, string func)
         {
             // 클라이언트 세팅전
             UInt32 user_id;
@@ -92,23 +93,58 @@ namespace TestAsyncUdp
                 user_id = 0;
             else
                 user_id = mClient.user_id;
-            string packet = ProtocolHandler.EncryptPacket(1, user_id, actor_list);
+            string packet = ProtocolHandler.EncryptPacket(1, user_id, actor_list, func);
             mNetModule.AddSendQueue(mHost, packet);
         }
-        public List<Actor> ProcessObject(UInt32 user_id, List<string> list)
+        // 클라이언트가 액터 리스트를 받아 
+        public void ProcessObject(UInt32 user_id, List<ObjectPacket> list)
         {
-            List<Actor> actor_list = new List<Actor>();
-            foreach(string s in list)
+            foreach (ObjectPacket op in list)
             {
-                // TODO: 클라가 받았을때 액터를 다시 생성하지 않고 기존에 있던 actor 를 찾아 쓸수 있는 방법 생각해보자.
+                // id를 통해 이미 액터가 존재하는지 체크
+                Actor b = Replicator.Instance.GetObject(op.object_type, op.object_id);
+                // 존재하면 갱신된 정보만 적용.
+                if (b != null)
+                {
+                    b.DeserializeObject(op.object_body);
+                    Console.WriteLine("actor ID:{0} posx:{1} posy:{2}", b.ID, b.PosX, b.PosY);
+                    continue;
+                }
+
+                // 존재하지 않으면 새로 만든 액터를 deserialize 하자.
                 Actor a = new Actor();
-                a.DeserializeObject(s);
-                Update(user_id, a);
-                actor_list.Add(a);
+                a.DeserializeObject(op.object_body);
+                Replicator.Instance.Update(user_id, a);
+
                 Console.WriteLine("actor ID:{0} posx:{1} posy:{2}", a.ID, a.PosX, a.PosY);
             }
+        }
+        public List<Actor> ProcessFunc(UInt32 user_id, string func)
+        {
+            string[] param_list = func.Split(' ');
+            List<Actor> list = new List<Actor>();
+            UInt32 param1 = 0;
+            if (param_list[0] == "move" && param_list.Length > 1 && UInt32.TryParse(param_list[1], out param1))
+            {
+                // 요청한 액터 가져오기
+                Actor a = Replicator.Instance.GetObject(typeof(Actor), param1);
+                if(a == null)
+                {
+                    System.Console.WriteLine("{0} object is null.", param1.ToString());
+                    return list;
+                }
 
-            return actor_list;
+                a.PosX += 10;
+                list.Add(a);
+            }
+            else if (param_list[0] == "spawn")
+            {
+                Actor a = new Actor();
+                Replicator.Instance.Update(user_id, a);
+                list.Add(a);
+            }
+
+            return list;
         }
     }
 }
