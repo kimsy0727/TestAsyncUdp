@@ -11,9 +11,27 @@ namespace TestClient
 {
     class Program
     {
+        public static void Tick()
+        {
+            while(true)
+            {
+                Dictionary<Type, Dictionary<ulong, Actor>> list = Replicator.Instance.GetObjectList();
+                foreach (KeyValuePair<Type, Dictionary<ulong, Actor>> actor_list in list)
+                {
+                    foreach (KeyValuePair<ulong, Actor> actor in actor_list.Value)
+                    {
+                        Console.WriteLine("actor ID:{0} type:{1} posx:{2} posy:{3}", actor.Value.ID, actor.Value.GetType().ToString(), actor.Value.PosX, actor.Value.PosY);
+                    }
+                }
+
+                Thread.Sleep(5000);
+            }
+        }
         static void Main(string[] args)
         {
             Replicator.Instance.StartClient();
+            Thread client_thread = new Thread(() => Tick());
+            client_thread.Start();
 
             while (true)
             {

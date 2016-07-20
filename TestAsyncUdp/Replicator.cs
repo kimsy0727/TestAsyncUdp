@@ -85,6 +85,11 @@ namespace TestAsyncUdp
             return mActorList[type][id];
         }
 
+        public Dictionary<Type, Dictionary<ulong, Actor>> GetObjectList()
+        {
+            return mActorList;
+        }
+
         public void SendPacket(List<Actor> actor_list, string func)
         {
             // 클라이언트 세팅전
